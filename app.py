@@ -2,83 +2,63 @@ import streamlit as st
 import random
 
 # 1. إعدادات الصفحة والهوية البصرية
-st.set_page_config(
-    page_title="تـرنـد | الحكاية من أولها",
-    page_icon="🔥",
-    layout="centered"
-)
+st.set_page_config(page_title="تـرنـد | الحكاية من أولها", page_icon="🔥", layout="centered")
 
-# تنسيق مخصص لجعل الواجهة فخمة (Dark Theme)
+# تنسيق الواجهة (Dark Theme)
 st.markdown("""
     <style>
-    .main {
-        direction: rtl;
-        text-align: right;
-    }
-    div.stButton > button:first-child {
-        background-color: #ff4b4b;
-        color: white;
-        width: 100%;
-        border-radius: 10px;
-    }
+    .main { direction: rtl; text-align: right; }
+    div.stButton > button:first-child { background-color: #ff4b4b; color: white; width: 100%; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. نظام التحقق والدخول
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
+# 2. تعريف الأكواد (أكواد الأصدقاء وقائد)
+MASTER_CODE = "MASTER-ADMIN-2026"
+USER_CODES = ["FRIEND-01", "FRIEND-02", "FRIEND-03", "FRIEND-04", "FRIEND-05"]
 
-if not st.session_state.authenticated:
+# 3. إدارة الجلسة (Session State)
+if 'user_role' not in st.session_state:
+    st.session_state.user_role = None
+
+# 4. بوابة الدخول
+if st.session_state.user_role is None:
     st.markdown("<h1 style='text-align: center;'>🔑 بوابة تـرنـد</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>أدخل كود القائد للوصول إلى النبض الحي</p>", unsafe_allow_html=True)
-    
-    admin_code = st.text_input("", type="password", placeholder="أدخل الكود هنا...")
+    entered_code = st.text_input("أدخل كود العبور الخاص بك:", type="password")
     
     if st.button("فـتـح البـوابـة"):
-        if admin_code == "COMMANDER-01":
-            st.session_state.authenticated = True
-            st.success("تم التحقق بنجاح.. جاري الدخول")
+        if entered_code == MASTER_CODE:
+            st.session_state.user_role = "admin"
+            st.rerun()
+        elif entered_code in USER_CODES:
+            st.session_state.user_role = "user"
             st.rerun()
         else:
-            st.error("الكود غير صحيح! الوصول مرفوض.")
+            st.error("الكود غير صحيح! يرجى التواصل مع الإدارة.")
 
 else:
-    # 3. واجهة التطبيق الحقيقية (بعد الدخول)
-    st.markdown("<h1 style='text-align: center;'>🔥 نـبـض الـتـرنـد</h1>", unsafe_allow_html=True)
+    # 5. واجهة التطبيق
+    role_title = "قـائـد" if st.session_state.user_role == "admin" else "مـستـخدم"
+    st.markdown(f"<h1 style='text-align: center;'>🔥 نـبـض الـتـرنـد ({role_title})</h1>", unsafe_allow_html=True)
     
-    # قائمة جانبية للتحكم
+    # القائمة الجانبية (تختلف حسب الرتبة)
     with st.sidebar:
         st.title("🕹️ غرفة القيادة")
-        st.write("الحالة: متصل بالرادار ✅")
-        st.write("المستخدمين الآن: 1 (أنت)")
+        if st.session_state.user_role == "admin":
+            st.success("أهلاً بك يا قائد. صلاحياتك كاملة ✅")
+            st.write("إحصائيات الرادار: نشط 📡")
+        else:
+            st.info("أهلاً بك يا ضيف تـرنـد. استمتع بالحكايات ✨")
+        
         if st.button("تسجيل الخروج"):
-            st.session_state.authenticated = False
+            st.session_state.user_role = None
             st.rerun()
 
-    # محاكاة لبيانات الرادار (ستتحدث تلقائياً مستقبلاً)
-    stories = [
-        {
-            "category": "🇸🇦 أخبار المملكة",
-            "title": "إنجاز تقني جديد في الرياض",
-            "heat": "🔥 متوهج",
-            "hook": "الشرارة بدأت من..",
-            "full_story": "إطلاق مبادرة وطنية ضخمة لدمج الذكاء الاصطناعي في التعليم العام، بدأت بورشة عمل سرية قبل 6 أشهر واليوم أصبحت واقعاً."
-        },
-        {
-            "category": "💰 اقتصاد",
-            "title": "قفزة في أسهم الطاقة",
-            "heat": "🟠 دافئ",
-            "hook": "الحكاية من أولها..",
-            "full_story": "تسريبات عن عقود توريد عالمية جديدة جعلت المستثمرين يتسابقون منذ ساعات الصباح الأولى، مما رفع المؤشر بنسبة 3%."
-        }
-    ]
-
-    # عرض القصص في الواجهة
-    for s in stories:
-        with st.expander(f"{s['category']} | {s['title']} ({s['heat']})"):
-            st.markdown(f"**{s['hook']}**")
-            st.write(s['full_story'])
-            st.button(f"مشاركة نبض {s['title']}", key=s['title'])
-
+    # محتوى الأخبار (النبض)
     st.markdown("---")
-    st.caption("التطبيق يعمل الآن بنسخة Alpha 1.0")
+    st.subheader("📡 آخر التحديثات الآن")
+    
+    # مثال لقصة تظهر للجميع
+    with st.container():
+        st.markdown("### 🇸🇦 أخبار المملكة | مشروع تقني واعد")
+        with st.expander("الحكاية من أولها.."):
+            st.write("بدأت كفكرة في مختبرات الرياض، واليوم نراها واقعاً يغير مجرى التقنية المحلية.")
